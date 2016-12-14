@@ -12,7 +12,7 @@ use Symfony\Component\Yaml\Yaml;
 
 (new Application('route-updater', '1.0.0'))
     ->register('update')
-        ->addArgument('path', InputArgument::OPTIONAL, 'The pattern to search in')
+        ->addArgument('path', InputArgument::OPTIONAL, 'The path to search')
         ->addArgument('pattern', InputArgument::OPTIONAL, 'The pattern of files to match')
         ->setCode(function(InputInterface $input, OutputInterface $output) {
 

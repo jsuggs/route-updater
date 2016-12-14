@@ -1,0 +1,23 @@
+{
+    "name": "jsuggs/route-updater",
+    "type": "application",
+    "description": "Convert Routing annotations",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jonathon Suggs",
+            "email": "jsuggs@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.0",
+        "symfony/console": "^3.2",
+        "symfony/yaml": "^3.2",
+        "symfony/finder": "^3.2",
+        "symfony/var-dumper": "^3.2"
+    },
+    "autoload": {
+        "psr-4": { "": "src/" }
+    },
+    "bin": ["route-updater"]
+}

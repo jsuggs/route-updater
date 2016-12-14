@@ -1,0 +1,66 @@
+#!/usr/bin/env php
+<?php
+require __DIR__.'/vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+use Symfony\Component\Finder\Finder;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Yaml\Yaml;
+
+(new Application('route-updater', '1.0.0'))
+    ->register('update')
+        ->addArgument('path', InputArgument::OPTIONAL, 'The pattern to search in')
+        ->addArgument('pattern', InputArgument::OPTIONAL, 'The pattern of files to match')
+        ->setCode(function(InputInterface $input, OutputInterface $output) {
+
+            $replaceKey = function(array $array, $old_key, $new_key) {
+                $keys = array_keys($array);
+                $index = array_search($old_key, $keys);
+                $keys[$index] = $new_key;
+
+                return array_combine($keys, array_values($array));
+            };
+
+            $processFile = function (string $file) use ($replaceKey, $output) {
+                if (!file_exists($file)) {
+                    throw new \RuntimeException(sprintf('File: "%s" does not exist.', $file));
+                    return;
+                }
+
+                $routes = Yaml::parse(file_get_contents($file));
+
+                $yaml = '';
+                foreach ($routes as $key => $data) {
+                    $export = [];
+                    if (isset($data['pattern'])) {
+                        $data = $replaceKey($data, 'pattern', 'path');
+                    }
+
+                    if (isset($data['requirements']) && isset($data['requirements']['_method'])) {
+                        $methods = array_map('strtoupper', explode('|', $data['requirements']['_method']));
+                        unset($data['requirements']['_method']);
+                        if (count($data['requirements']) === 0) {
+                            unset($data['requirements']);
+                        }
+                        $data['methods'] = $methods;
+                    }
+
+                    $export[$key] = $data;
+                    $yaml .= Yaml::dump($export) . "\n";
+                }
+
+                file_put_contents($file, $yaml);
+                $output->writeln(sprintf('<info>%s</info>', $file));
+            };
+
+            $finder = new Finder();
+            foreach ($finder->in($input->getArgument('path'))->name(sprintf('/%s/', $input->getArgument('pattern'))) as $file) {
+                $processFile($file->getRealPath());
+            }
+        })
+    ->getApplication()
+    ->setDefaultCommand('update', true) // Single command application
+    ->run();
